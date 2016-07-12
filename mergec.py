@@ -157,23 +157,25 @@ def parseGeom(geom):
 
 
 def constructQuery_multiPairObj(event_ids, placenamesets, bboxessets):
+    print("\n\n\n\n")
     debubPrefix = "debugtest_"
+    geo = open(debubPrefix + "_geometries","w")
     # diff table?
     f = open(debubPrefix + "location_merge_queries_multipair","w")
     # debug files
     db = open(debubPrefix + "places_per_event_multipair.debug","w")
     
     for e in range(len(event_ids)):
-        wasSet = 0
+        print("**** EVENT ",e)
+
         mapstr = ""
         eventMap = []        # Map as in CQL map
+        geo.write("Event " + str(e) + "\n")
         for p in range(len(placenamesets[e])):
             place = placenamesets[e][p]
             db.write(place + " ")
             eventMap.append(['"locationName"','"' + place + '"'])
-            if wasSet == 0:
-                mapstr = "{"
-                wasSet = 1
+
 
             
             if  bboxessets[e][p] == "null":
@@ -181,42 +183,120 @@ def constructQuery_multiPairObj(event_ids, placenamesets, bboxessets):
             else:
                 (gtype,coords) = parseGeom(bboxessets[e][p])
                 eventMap.append(['"type"',gtype])
+                print("\n parsed : \n" +  place + ":" + "(" + coords +") , ")
                 eventMap.append(['"coordinates"','"(' + coords + ')"'])
+                geo.write(place + ":" + "(" + coords +") , ")
                 
             # the supermap for the current location is complete : it's 3 CQL maps
             # locationName :name, type :geomtype, coordinates: (n1 n2, n3 n4, ..., n9 n10)
             assert(len(eventMap) == 3,"Event map of length =/= 3!")
-            
+        geo.write("\n")
         # populate mapstr
         # loc. coutner to enclose each location in {}
         locationCounter = 0
-        for e in range(len(eventMap)):
-            if locationCounter = 0:
+        for em in range(len(eventMap)):
+            if locationCounter == 0:
                 mapstr+="{"
-            if e > 0 and e < len(eventMap):
+            if locationCounter > 0 and em < len(eventMap):
                 mapstr += ","
-            obj = eventMap[e]
-            print (mapstr)
-            mapstr += obj[0] + ":" + obj[1]
+            obj = eventMap[em]
+
+            mapstr += "'" + obj[0] + "'" + ":" + "'" + obj[1] + "'"
+            locationCounter += 1
             if locationCounter == 3:
                 mapstr+="}"
                 locationCounter = 0
-                
-                
-        mapstr += "}"
-        if wasSet == 1:
-            query = "update events set place_mappings = place_mappings + " + mapstr + " where event_id = '" + event_ids[e] + "' ; ";
+                query = "update events set place_mappings = place_mappings + " + mapstr + " where event_id = '" + event_ids[e] + "' ; ";
             
-            f.write(query)
-            f.write("\n")
-        db.write("\n")
+                f.write(query + "\n")
+                mapstr = ""
+                
+                
             
     f.close()
-    
+    geo.close()
     db.close();
     print("Done.")  
     
+
+
+# In the format of 
+# 
+# {“locationName”: Canada, # “coordinates”: 
+# "(51.7083549499512 15.0024843215942,51.7083549499512 15.6775121688843,
+#  51.1747894287109 15.6775121688843,51.1747894287109 15.0024843215942,
+#  51.7083549499512 15.0024843215942)”}
+def constructQuery_singlePairObj_2(event_ids, placenamesets, bboxessets):
+    print("\n\n\n\n")
+    debubPrefix = "debugtest_"
+    geo = open(debubPrefix + "_geometries","w")
+    # diff table?
+    f = open(debubPrefix + "location_merge_queries_singlepair2","w")
+    # debug files
+    db = open(debubPrefix + "places_per_event_singlepair2.debug","w")
     
+    for e in range(len(event_ids)):
+        print("**** EVENT ",e)
+
+        mapstr = ""
+        eventMap = []        # Map as in CQL map
+        geo.write("Event " + str(e) + "\n")
+        for p in range(len(placenamesets[e])):
+            place = placenamesets[e][p]
+            db.write(place + " ")
+            eventMap.append(['"locationName"','"' + place + '"'])
+
+
+            
+            if  bboxessets[e][p] == "null":
+                mapstr += "'"+ place + "' : '" + bboxessets[e][p] +"'";
+            else:
+                (gtype,coords) = parseGeom(bboxessets[e][p])
+                eventMap.append(['"type"',gtype])
+                print("\n parsed : \n" +  place + ":" + "(" + coords +") , ")
+                eventMap.append(["\"coordinates\"",'"(' + coords + ')"'])
+                geo.write(place + ":" + "(" + coords +") , ")
+                
+            # the supermap for the current location is complete : it's 3 CQL maps
+            # locationName :name, type :geomtype, coordinates: (n1 n2, n3 n4, ..., n9 n10)
+            assert(len(eventMap) == 3,"Event map of length =/= 3!")
+        geo.write("\n")
+        # populate mapstr
+        # loc. coutner to enclose each location in {}
+        locationCounter = 0
+        for em in range(len(eventMap)):
+            if eventMap[em][0] == '"type"':
+                continue;
+            if locationCounter == 0:
+                mapstr+="{"
+            if locationCounter == 1:
+                mapstr += ":"
+            obj = eventMap[em]
+
+            mapstr += "'" + obj[0] +  ":" +  obj[1] + "'"
+            locationCounter += 1
+            if locationCounter == 2:
+                mapstr+="}"
+                locationCounter = 0
+                query = "update events set place_mappings = place_mappings + " + mapstr + " where event_id = '" + event_ids[e] + "' ; ";
+                f.write(query + "\n")
+                mapstr = ""
+                
+
+           
+        #if mapstr:
+        #    query = "update events set place_mappings = place_mappings + " + mapstr + " where event_id = '" + event_ids[e] + "' ; ";
+        #    f.write(query + "\n")
+        #    mapstr = ""
+                
+                
+            
+    f.close()
+    geo.close()
+    db.close();
+    print("Done.")  
+    
+
 def main():
 
     argv = []
@@ -267,8 +347,12 @@ def main():
                     # get the places corresponding to that url
                     # for each place in that set, find the bbox
                     for eventPlaceIdx in range(len(places[s])):
-                        
+                                                
                         placename = places[s][eventPlaceIdx];
+                        # if the place already exists for that event
+                        # skip it
+                        if placename in placenamesets[eventIndex]:
+                            continue;
                         placenamesets[eventIndex].append(placename)
                         bbox = getBBox(placename,pplc_places,pplc_bbox)
                         bboxessets[eventIndex].append(bbox)
@@ -281,24 +365,11 @@ def main():
     
     #constructQuery_singlePairObj(event_ids, placenamesets, bboxessets)
   
-    constructQuery_multiPairObj(event_ids, placenamesets, bboxessets)
+    #constructQuery_multiPairObj(event_ids, placenamesets, bboxessets)
 
-    
-    
+    constructQuery_singlePairObj_2(event_ids, placenamesets, bboxessets)
     
 
-
-    
-    # no need to delimit!
-
-    # some text edotprs fuck up the <null> entry (like sublime)    
-    
-    # construct a query per 
-    
-# place_mappings is what we wanna fill    
-    
-   # for line in eventsf.readlines():
-   #     line = strip(line)
     
     
      
