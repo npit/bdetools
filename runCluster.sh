@@ -9,7 +9,10 @@ echo "args $#"
 echo "container name : $name"
 cp mergedb.py merge.sh builddb_cluster mnt/
 
-mountdir="/home/npittaras/Documents/docker/cassandra/mnt"
+hostmountdir="/home/nik/work/iit/docker/cassandra/mnt"
+hostdatadir="/home/npittaras/Documents/project/BDE/clusterData"
+
+mkdir -p $mountdir
 dockermountdir="/mnt"
 image="cassandra:2.2.4"
 
@@ -53,8 +56,7 @@ done
 #read -p ""
 
 
-datadir=$dockermountdir/data
-hostdatadir="/home/npittaras/Documents/project/BDE/clusterData"
+dockerdatadir=$dockermountdir/data
 outdir="$dockermountdir/verify"
 docker exec $name mkdir -p $outdir
 mkdir -p mnt/data
