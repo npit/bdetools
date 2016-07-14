@@ -1,30 +1,33 @@
 #!/usr/bin/env bash
 
-if [ $# -eq 0 ]; then
-	name="cluster"
-else
-	name="$1"
-fi
 
-hostmountdir="/home/nik/work/iit/docker/cassandra/mnt"
-hostdatadir="/home/npittaras/Documents/project/BDE/clusterData"
+hostmountdir="$1"
+dockermountdir="$2"
+hostdatadir="$3"
+name="$4"
 
-dockermountdir="/mnt"
-image="cassandra:2.2.4"
+#hostmountdir="/home/nik/work/iit/docker/cassandra/mnt"
+#dockermountdir="/mnt"
+#name=""
+echo "Uploading data to $name"
 
-datadir=$dockermountdir/data
-outdir="$dockermountdir/verify"
-configFile="$dockermountdir/cqlshrc"
+dockerdatadir="$dockermountdir/data"
+hostmountdatadir="$hostmountdir/data"
+dockerConfigFile="$dockermountdir/cqlshrc"
+
+# make data directories on host and container
+docker exec $name mkdir -p $dockerdatadir
+mkdir -p $hostmountdatadir
 
 echo "*************************"
 echo "Uploading data"
 
-echo "Importing data. Conf. file : [$configFile]"
+echo "Importing data. Conf. file : [$dockerConfigFile]"
 for tablename in $(ls $hostdatadir); do
 	echo "Pushing to $tablename"
-	cp $hostdatadir/$tablename $mountdir/data/$tablename
+	cp $hostdatadir/$tablename $hostmountdatadir/$tablename
 	#WORKS!
-	docker exec $name  cqlsh --cqlshrc "$configFile"  -k "bde" -e "COPY $tablename FROM '$datadir/$tablename'"
+	docker exec $name  cqlsh --cqlshrc "$dockerConfigFile"  -k "bde" -e "COPY $tablename FROM '$dockerdatadir/$tablename'"
 
 	#test does not work : field larger than field limit (131072) @ news articles
 	#docker exec $name  cqlsh -k "bde" -e "COPY $tablename FROM '$datadir/$tablename'"

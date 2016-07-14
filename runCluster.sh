@@ -7,27 +7,27 @@ else
 fi
 echo "args $#"
 echo "container name : $name"
-cp mergedb.py merge.sh builddb_cluster mnt/
+
 
 hostmountdir="/home/nik/work/iit/docker/cassandra/mnt"
-hostdatadir="/home/npittaras/Documents/project/BDE/clusterData"
-
-mkdir -p $mountdir
 dockermountdir="/mnt"
+hostdatadir="/home/nik/work/iit/docker/cassandra/data"
+keyspacebuildcommands="/home/nik/work/iit/docker/cassandra/cluster_keyspace_build_cmds"
 image="cassandra:2.2.4"
+hostConfigFile="$hostmountdir/cqlshrc"
+echo "[csv]" > $hostConfigFile
+echo "field_size_limit: 500000" >> $hostConfigFile
+
+mkdir -p $hostmountdir
 
 # run container
 docker run --name=$name -dit \
 -p 127.0.0.1:9000:9042 \
--v $mountdir:$dockermountdir \
+-v $hostmountdir:$dockermountdir \
 $image
-sleep 1
+
+
 # start cassandra service
-#docker exec $name  service cassandra start
-#docker exec $name  service cassandra status
-#docker exec $name  service cassandra restart
-#sleep 5
-#docker exec $name  service cassandra status
 
 echo "Waiting for cqlsh server to get ready."
 while [ 1 ]; do
@@ -43,35 +43,21 @@ while [ 1 ]; do
 		break
 	fi
 done
-#docker exec -it $name  bash 
-
-#docker exec -it $name  bash -c $dockermountdir/wait.sh
-
-#docker exec -it $name bash
-
-#docker exec -it $name  watch "cat /var/log/cassandra/system.log | grep 'Starting listening for CQL clients' "
-#docker exec -it $name  watch "tail /var/log/cassandra/system.log"
-
-#echo "Paused - check that cassandra's up"
-#read -p ""
-
-
-dockerdatadir=$dockermountdir/data
-outdir="$dockermountdir/verify"
-docker exec $name mkdir -p $outdir
-mkdir -p mnt/data
-configFile="$dockermountdir/cqlshrc"
+rm -f temp
 
 # build db
+############
+# copy build commands to mount docker dir
+cp $keyspacebuildcommands $hostmountdir/keyspacebuildcmds
 echo "Building keyspace & tables"
 docker exec $name  cqlsh -e "DROP KEYSPACE IF EXISTS bde;"
-docker exec $name  cqlsh -f $dockermountdir/builddb_cluster
+docker exec $name  cqlsh -f $dockermountdir/keyspacebuildcmds
 docker exec $name  cqlsh -e "DESCRIBE KEYSPACES;"
 echo "Built."
 
 # import the data
 
-./uploadData.sh
+./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
 
 
 
