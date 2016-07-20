@@ -9,10 +9,10 @@ echo "args $#"
 echo "container name : $name"
 
 
-hostmountdir="/home/nik/work/iit/docker/cassandra/mnt"
+hostmountdir="/home/npittaras/Documents/docker/cassandra/mnt"
 dockermountdir="/mnt"
-hostdatadir="/home/nik/work/iit/docker/cassandra/data"
-keyspacebuildcommands="/home/nik/work/iit/docker/cassandra/cluster_keyspace_build_cmds"
+hostdatadir="/home/npittaras/Documents/project/BDE/clusterData"
+keyspacebuildcommands="/home/npittaras/Documents/docker/cassandra/cluster_keyspace_build_cmds"
 image="cassandra:2.2.4"
 hostConfigFile="$hostmountdir/cqlshrc"
 echo "[csv]" > $hostConfigFile
