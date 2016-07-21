@@ -12,7 +12,7 @@ echo "container name : $name"
 hostmountdir="/home/npittaras/Documents/docker/cassandra/mnt"
 dockermountdir="/mnt"
 hostdatadir="/home/npittaras/Documents/project/BDE/clusterData"
-keyspacebuildcommands="/home/npittaras/Documents/docker/cassandra/cluster_keyspace_build_cmds"
+keyspacebuildcommands="/home/npittaras/Documents/docker/cassandra/cluster_keyspace_build_cmds_updatedevents"
 image="cassandra:2.2.4"
 hostConfigFile="$hostmountdir/cqlshrc"
 echo "[csv]" > $hostConfigFile
@@ -56,12 +56,12 @@ docker exec $name  cqlsh -e "DESCRIBE KEYSPACES;"
 echo "Built."
 
 # import the data
-
-./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
+echo "Not importing data, suspended."
+#./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
 
 
 
 
 
 # attach terminal
-docker exec -it $name bash
+docker exec -it $name cqlsh -k "bde" -e "";
