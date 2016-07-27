@@ -2,8 +2,10 @@
 
 if [ $# -eq 0 ]; then
 	name="cluster"
+	portbind="9000"
 else
 	name="$1"
+	portbind="$2"
 fi
 echo "args $#"
 echo "container name : $name"
@@ -22,7 +24,7 @@ mkdir -p $hostmountdir
 
 # run container
 docker run --name=$name -dit \
--p 127.0.0.1:9000:9042 \
+-p 127.0.0.1:$portbind:9042 \
 -v $hostmountdir:$dockermountdir \
 $image
 
