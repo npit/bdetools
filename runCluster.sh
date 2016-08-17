@@ -9,6 +9,7 @@ else
 fi
 echo "args $#"
 echo "container name : $name"
+echo "mapped to host port : $portbind"
 
 
 hostmountdir="/home/npittaras/Documents/docker/cassandra/mnt"
