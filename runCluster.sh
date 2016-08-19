@@ -69,7 +69,7 @@ echo "Not importing data, suspended."
 #"COPY bde.twitter_source (account_name, active) FROM '$dockermountdir/sourceTwitterAccounts.csv' WITH HEADER = TRUE AND DELIMITER = '|';";
 
 echo "ip:"
-docker inspect --format="{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"
+docker inspect --format="{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" cluster
 
 
 # attach terminal
