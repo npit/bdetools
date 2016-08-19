@@ -62,13 +62,14 @@ echo "Built."
 echo "Not importing data, suspended."
 #./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
 
-echo "Building twitter_source."
-cp "/home/npittaras/Documents/project/BDE/BDEproject/bde-event-detection-sc7/BDETwitterListener/res/db/cassandra/sample_source_accounts.csv" \
-	$hostmountdir/sourceTwitterAccounts.csv
-docker exec $name  cqlsh -e \
-"COPY bde.twitter_source (account_name, active) FROM '$dockermountdir/sourceTwitterAccounts.csv' WITH HEADER = TRUE AND DELIMITER = '|';";
+#echo "Building twitter_source."
+#cp "/home/npittaras/Documents/project/BDE/BDEproject/bde-event-detection-sc7/BDETwitterListener/res/db/cassandra/sample_source_accounts.csv" \
+#	$hostmountdir/sourceTwitterAccounts.csv
+#docker exec $name  cqlsh -e \
+#"COPY bde.twitter_source (account_name, active) FROM '$dockermountdir/sourceTwitterAccounts.csv' WITH HEADER = TRUE AND DELIMITER = '|';";
 
-
+echo "ip:"
+docker inspect --format="{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}"
 
 
 # attach terminal
