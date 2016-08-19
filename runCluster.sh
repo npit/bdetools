@@ -7,7 +7,6 @@ else
 	name="$1"
 	portbind="$2"
 fi
-echo "args $#"
 echo "container name : $name"
 echo "mapped to host port : $portbind"
 
@@ -24,10 +23,20 @@ echo "field_size_limit: 500000" >> $hostConfigFile
 mkdir -p $hostmountdir
 
 # run container
-docker run --name=$name -dit \
+docker run --name=$name -dit  \
 -p 127.0.0.1:$portbind:9042 \
 -v $hostmountdir:$dockermountdir \
 $image
+
+# add db rebuilding script, useful for debuggery
+cp ./rebuilddb.sh ./rebuild
+# set the docker build commands path
+sed -i "s<commands=<commands=$dockermountdir/keyspacebuildcmds<g" ./rebuild
+cp ./rebuild $hostmountdir/
+# move it to / in the container
+docker exec $name mv $dockermountdir/rebuild /rebuild
+# remove it from the host
+rm ./rebuild
 
 
 # start cassandra service
@@ -73,4 +82,8 @@ docker inspect --format="{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}
 
 
 # attach terminal
+echo "Popping cqlsh."
 docker exec -it $name cqlsh -k "bde" -e "";
+# to bash
+echo "Popping to bash."
+docker exec -it $name  bash
