@@ -17,6 +17,10 @@ dockermountdir="/mnt"
 #hostdatadir=""  # only relevant if you want to load external data
 keyspacebuildcommands="./cluster_keyspace_build_cmds_updatedevents"
 image="cassandra:2.2.4"
+hostConfigFile="./cqlshrc"
+
+mkdir -p  "$hostmountdir"
+cp "$hostConfigFile" "$hostmountdir/cqlshrc"
 hostConfigFile="$hostmountdir/cqlshrc"
 echo "[csv]" > $hostConfigFile
 echo "field_size_limit: 500000" >> $hostConfigFile
