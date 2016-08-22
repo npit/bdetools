@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
 
+
 if [ $# -eq 0 ]; then
 	name="cluster"
 else
@@ -57,7 +58,8 @@ echo "Built."
 
 # import the data
 
-./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
+echo "Will not upload any data"
+#./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
 
 
 
