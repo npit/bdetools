@@ -11,10 +11,11 @@ echo "container name : $name"
 echo "mapped to host port : $portbind"
 
 
-hostmountdir="/home/npittaras/Documents/docker/cassandra/mnt"
+# hostmountdir has to be full path
+hostmountdir="$(pwd)/mnt"
 dockermountdir="/mnt"
-hostdatadir="/home/npittaras/Documents/project/BDE/clusterData"
-keyspacebuildcommands="/home/npittaras/Documents/docker/cassandra/cluster_keyspace_build_cmds_updatedevents"
+#hostdatadir=""  # only relevant if you want to load external data
+keyspacebuildcommands="./cluster_keyspace_build_cmds_updatedevents"
 image="cassandra:2.2.4"
 hostConfigFile="$hostmountdir/cqlshrc"
 echo "[csv]" > $hostConfigFile
@@ -71,18 +72,11 @@ echo "Built."
 echo "Not importing data, suspended."
 #./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
 
-#echo "Building twitter_source."
-#cp "/home/npittaras/Documents/project/BDE/BDEproject/bde-event-detection-sc7/BDETwitterListener/res/db/cassandra/sample_source_accounts.csv" \
-#	$hostmountdir/sourceTwitterAccounts.csv
-#docker exec $name  cqlsh -e \
-#"COPY bde.twitter_source (account_name, active) FROM '$dockermountdir/sourceTwitterAccounts.csv' WITH HEADER = TRUE AND DELIMITER = '|';";
-
 echo "ip:"
 docker inspect --format="{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" $name
 
-
-# attach terminal
-echo "Popping cqlsh."
+# attach terminal, jump to cqlsh
+echo "Popping to cqlsh."
 docker exec -it $name cqlsh -k "bde" -e "";
 # to bash
 echo "Popping to bash."

@@ -6,9 +6,6 @@ dockermountdir="$2"
 hostdatadir="$3"
 name="$4"
 
-#hostmountdir="/home/nik/work/iit/docker/cassandra/mnt"
-#dockermountdir="/mnt"
-#name=""
 echo "Uploading data to $name"
 
 dockerdatadir="$dockermountdir/data"
