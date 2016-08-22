@@ -3,17 +3,19 @@
 
 if [ $# -eq 0 ]; then
 	name="cluster"
+	portbind="9000"
 else
 	name="$1"
+	portbind="$2"
 fi
-echo "args $#"
 echo "container name : $name"
+echo "mapped to host port : $portbind"
 
 
-hostmountdir="/home/nik/work/iit/docker/cassandra/mnt"
+hostmountdir="/home/npittaras/Documents/docker/cassandra/mnt"
 dockermountdir="/mnt"
-hostdatadir="/home/nik/work/iit/docker/cassandra/data"
-keyspacebuildcommands="/home/nik/work/iit/docker/cassandra/cluster_keyspace_build_cmds"
+hostdatadir="/home/npittaras/Documents/project/BDE/clusterData"
+keyspacebuildcommands="/home/npittaras/Documents/docker/cassandra/cluster_keyspace_build_cmds_updatedevents"
 image="cassandra:2.2.4"
 hostConfigFile="$hostmountdir/cqlshrc"
 echo "[csv]" > $hostConfigFile
@@ -22,10 +24,20 @@ echo "field_size_limit: 500000" >> $hostConfigFile
 mkdir -p $hostmountdir
 
 # run container
-docker run --name=$name -dit \
--p 127.0.0.1:9000:9042 \
+docker run --name=$name -dit  \
+-p 127.0.0.1:$portbind:9042 \
 -v $hostmountdir:$dockermountdir \
 $image
+
+# add db rebuilding script, useful for debuggery
+cp ./rebuilddb.sh ./rebuild
+# set the docker build commands path
+sed -i "s<commands=<commands=$dockermountdir/keyspacebuildcmds<g" ./rebuild
+cp ./rebuild $hostmountdir/
+# move it to / in the container
+docker exec $name mv $dockermountdir/rebuild /rebuild
+# remove it from the host
+rm ./rebuild
 
 
 # start cassandra service
@@ -57,13 +69,26 @@ docker exec $name  cqlsh -e "DESCRIBE KEYSPACES;"
 echo "Built."
 
 # import the data
+echo "Not importing data, suspended."
+#./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
+
 
 echo "Will not upload any data"
 #./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
 
+#echo "Building twitter_source."
+#cp "/home/npittaras/Documents/project/BDE/BDEproject/bde-event-detection-sc7/BDETwitterListener/res/db/cassandra/sample_source_accounts.csv" \
+#	$hostmountdir/sourceTwitterAccounts.csv
+#docker exec $name  cqlsh -e \
+#"COPY bde.twitter_source (account_name, active) FROM '$dockermountdir/sourceTwitterAccounts.csv' WITH HEADER = TRUE AND DELIMITER = '|';";
 
-
+echo "ip:"
+docker inspect --format="{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" $name
 
 
 # attach terminal
-docker exec -it $name bash
+echo "Popping cqlsh."
+docker exec -it $name cqlsh -k "bde" -e "";
+# to bash
+echo "Popping to bash."
+docker exec -it $name  bash
