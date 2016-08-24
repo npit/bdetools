@@ -12,10 +12,10 @@ echo "container name : $name"
 echo "mapped to host port : $portbind"
 
 
-hostmountdir="/home/npittaras/Documents/docker/cassandra/mnt"
+hostmountdir="$(pwd)/mnt"
 dockermountdir="/mnt"
 hostdatadir="/home/npittaras/Documents/project/BDE/clusterData"
-keyspacebuildcommands="/home/npittaras/Documents/docker/cassandra/cluster_keyspace_build_cmds_updatedevents"
+keyspacebuildcommands="./cluster_keyspace_build_cmds_updatedevents"
 image="cassandra:2.2.4"
 hostConfigFile="$hostmountdir/cqlshrc"
 echo "[csv]" > $hostConfigFile
