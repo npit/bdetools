@@ -29,9 +29,12 @@ mkdir -p $hostmountdir
 
 # run container
 docker run --name=$name -dit  \
--p 127.0.0.1:$portbind:9042 \
 -v $hostmountdir:$dockermountdir \
+ --net=host \
 $image
+#-p 127.0.0.1:$portbind:9042 \
+
+
 
 # add db rebuilding script, useful for debuggery
 cp ./rebuilddb.sh ./rebuild
