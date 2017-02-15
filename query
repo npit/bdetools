@@ -1,0 +1,8 @@
+#!/usr/bin/env bash
+command=""
+for i in $@
+do
+	command+="$i "
+done
+cqlsh  -k "bde" -e "$command" 
+

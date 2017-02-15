@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+curl -d '["People''s Republic of China"]' -X POST -H "Content-Type:application/json" "http://teleios4.di.uoa.gr:8080/changeDetection/location/geocode" 
+
+

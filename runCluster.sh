@@ -4,12 +4,17 @@
 if [ $# -eq 0 ]; then
 	name="cluster"
 	portbind="9000"
+	ver="2.2.4"
+	net="--net=host"
 else
 	name="$1"
 	portbind="$2"
+	ver="$3"
+	net="$4"
 fi
 echo "container name : $name"
-echo "mapped to host port : $portbind"
+echo "host port : $portbind"
+echo "cassandra version : $ver"
 
 
 # hostmountdir has to be full path
@@ -18,7 +23,7 @@ dockermountdir="/mnt"
 #hostdatadir=""  # only relevant if you want to load external data
 
 keyspacebuildcommands="./cluster_keyspace_build_cmds_updatedevents"
-image="cassandra:2.2.4"
+image="cassandra:$ver" 
 hostConfigFile="./cqlshrc"
 
 mkdir -p  "$hostmountdir"
@@ -28,12 +33,14 @@ echo "[csv]" > $hostConfigFile
 echo "field_size_limit: 500000" >> $hostConfigFile
 
 mkdir -p $hostmountdir
+cmd=""
 
 # run container
-docker run --name=$name -dit  \
--v $hostmountdir:$dockermountdir \
- --net=host \
-$image
+cmd+="docker run --name=$name -d "
+cmd+="-v $hostmountdir:$dockermountdir"
+cmd+=" $net $image"
+echo "$cmd"
+$cmd
 #-p 127.0.0.1:$portbind:9042 \
 
 
@@ -87,6 +94,10 @@ docker inspect --format="{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}
 # attach terminal, jump to cqlsh
 echo "Popping to cqlsh."
 docker exec -it $name cqlsh -k "bde" -e "";
+# add querying script
+cp ./query $hostmountdir/query
+docker exec -it $name  cp $dockermountdir/query /query
+
 # to bash
 echo "Popping to bash."
 docker exec -it $name  bash
