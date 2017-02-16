@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-
 if [ $# -eq 0 ]; then
 	name="cluster"
 	portbind="9000"
@@ -19,36 +18,40 @@ echo "cassandra version : $ver"
 
 # hostmountdir has to be full path
 hostmountdir="$(pwd)/mnt"
+mkdir -p  "$hostmountdir"
+
 dockermountdir="/mnt"
 #hostdatadir=""  # only relevant if you want to load external data
 
-keyspacebuildcommands="./cluster_keyspace_build_cmds_updatedevents"
+keyspacebuildcommands="./keyspaceDescr/*"
 image="cassandra:$ver" 
 hostConfigFile="./cqlshrc"
 
-mkdir -p  "$hostmountdir"
 cp "$hostConfigFile" "$hostmountdir/cqlshrc"
 hostConfigFile="$hostmountdir/cqlshrc"
 echo "[csv]" > $hostConfigFile
 echo "field_size_limit: 500000" >> $hostConfigFile
 
-mkdir -p $hostmountdir
-cmd=""
+
 
 # run container
-cmd+="docker run --name=$name -d "
+cmd=""
+cmd+="docker run --name=$name -dit "
 cmd+="-v $hostmountdir:$dockermountdir"
-cmd+=" $net $image"
+cmd+=" $net $image bash"
 echo "$cmd"
 $cmd
-#-p 127.0.0.1:$portbind:9042 \
 
 
-
+# copy builds commands to mount dir
+dockerBuildFolder=$dockermountdir/build_commands
+mkdir -p $hostmountdir/build_commands
+cp $keyspacebuildcommands $hostmountdir/build_commands/
 # add db rebuilding script, useful for debuggery
+# and set the correct build dir
 cp ./rebuilddb.sh ./rebuild
-# set the docker build commands path
-sed -i "s<commands=<commands=$dockermountdir/keyspacebuildcmds<g" ./rebuild
+
+sed -i "s<CommandsFolder=<CommandsFolder=$dockerBuildFolder<g" ./rebuild
 cp ./rebuild $hostmountdir/
 # move it to / in the container
 docker exec $name mv $dockermountdir/rebuild /rebuild
@@ -57,8 +60,9 @@ rm ./rebuild
 
 
 # start cassandra service
-
+cp start.sh $hostmountdir/
 echo "Waiting for cqlsh server to get ready."
+docker exec $name  $dockermountdir/start.sh
 while [ 1 ]; do
 	docker exec $name cqlsh -e "describe keyspaces" > temp 2>&1
 
@@ -77,16 +81,18 @@ rm -f temp
 # build db
 ############
 # copy build commands to mount docker dir
-cp $keyspacebuildcommands $hostmountdir/keyspacebuildcmds
 echo "Building keyspace & tables"
 docker exec $name  cqlsh -e "DROP KEYSPACE IF EXISTS bde;"
-docker exec $name  cqlsh -f $dockermountdir/keyspacebuildcmds
+echo "Building"
+docker exec $name cqlsh -f "$dockerBuildFolder/base"
+docker exec $name cqlsh -f "$dockerBuildFolder/news"
+docker exec $name cqlsh -f "$dockerBuildFolder/twitter"
+docker exec $name cqlsh -f "$dockerBuildFolder/location"
+docker exec $name cqlsh -f "$dockerBuildFolder/events"
 docker exec $name  cqlsh -e "DESCRIBE KEYSPACES;"
 echo "Built."
 
-# import the data
-echo "Not importing data, suspended."
-#./uploadData.sh $hostmountdir $dockermountdir $hostdatadir  $name
+
 
 echo "ip:"
 docker inspect --format="{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}" $name

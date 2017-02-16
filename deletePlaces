@@ -14,3 +14,4 @@ cp del_location_cmds mnt/del_location_cmds
 docker exec $container cqlsh -k "bde" -f /mnt/del_location_cmds
 docker exec $container cqlsh -k "bde" -e "truncate location_extraction_log";
 docker exec $container cqlsh -k "bde" -e "truncate news_articles_per_place";
+rm del_location_cmds

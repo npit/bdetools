@@ -1,0 +1,16 @@
+#!/usr/bin/env bash
+
+ipaddr="127.0.0.1"
+port="9042"
+container="cluster"
+
+# get articles
+docker exec  $container cqlsh -k "bde" -e "select entry_url, reversed_host from news_articles" | head -n -2 | tail -n +4  \
+| sed "s<[ ]|[ ]<' and reversed_host='<g" \
+| sed "s<http://<update news_articles set entity=null where entry_url='http://<g" \
+| sed "s<$<';<g" | sed "s<^[ ][ ]*<<g"> del_entities_cmds
+
+cp del_entities_cmds mnt/del_entities_cmds
+docker exec $container cqlsh -k "bde" -f /mnt/del_entities_cmds
+docker exec $container cqlsh -k "bde" -e "truncate location_extraction_log";
+rm del_entities_cmds

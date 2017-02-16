@@ -4,5 +4,5 @@ for i in $@
 do
 	command+="$i "
 done
-cqlsh  -k "bde" -e "$command" 
+docker exec cluster cqlsh  -k "bde" -e "$command" 
 
